@@ -1,0 +1,14 @@
+{
+  "dependencies": [
+    {
+      "name": "snake-server",
+      "type": "haxelib",
+      "version": ""
+    },
+    {
+      "name": "lime",
+      "type": "haxelib",
+      "version": ""
+    }
+  ]
+}

@@ -1,54 +1,32 @@
 package;
 
-import haxe.CallStack;
-import haxe.Json;
-import haxe.io.Bytes;
-import haxe.net.WebSocket;
-import haxe.net.WebSocketServer;
+import hx.ws.SocketImpl;
+import hx.ws.WebSocketHandler;
+import hx.ws.Types;
 
-class FootNoteWebSocketHandler {
-	static var _nextId = 0;
-	var _id = _nextId++;
-	var _websocket:WebSocket;
-	
-	public function new(websocket:WebSocket) {
-		_websocket = websocket;
-		_websocket.onopen = onopen;
-		_websocket.onclose = onclose;
-		_websocket.onerror = onerror;
-		_websocket.onmessageBytes = onmessageBytes;
-		_websocket.onmessageString = onmessageString;
-	}
-	
-	public function update():Bool {
-		_websocket.process();
-		return _websocket.readyState != Closed;
-	}
-	
-    function onopen():Void {
-		trace('$_id:open');
-		//_websocket.sendString('Hello from server');
+class FootNoteWebSocketHandler extends WebSocketHandler {
+    public function new(s: SocketImpl) {
+        super(s);
+        onopen = function() {
+            trace(id + ". OPEN");
+        }
+        onclose = function() {
+            trace(id + ". CLOSE");
+        }
+        onmessage = function(message: MessageType) {
+            switch (message) {
+                case BytesMessage(content):
+                    var str = "echo: " + content.readAllAvailableBytes();
+                    trace(str);
+                    send(str);
+                case StrMessage(content):
+                    var str = "echo: " + content;
+                    trace(str);
+                    send(str);
+            }
+        }
+        onerror = function(error) {
+            trace(id + ". ERROR: " + error);
+        }
     }
-
-    function onerror(message:String):Void {
-		trace('$_id:error: $message');
-    }
-
-    function onmessageString(message:String):Void {
-		trace('$_id:message: $message');
-		_websocket.sendString(message);
-    }
-
-    function onmessageBytes(message:Bytes):Void {
-		trace('$_id:message bytes:' + message.toHex());
-		_websocket.sendBytes(message);
-    }
-
-    function onclose(?e:Null<Dynamic>):Void {
-		trace('$_id:close');
-    }
-
-    public function sendString(msg:String):Void {
-		_websocket.sendString(msg);
-	}
 }

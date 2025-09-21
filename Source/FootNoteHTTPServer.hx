@@ -9,6 +9,7 @@ import snake.http.*;
 import FootNoteWebSocketServer;
 
 class FootNoteHTTPServer extends HTTPServer {
+	
 	private var directory:String;
 	private static var instance:FootNoteHTTPServer = null; //singleton 
 

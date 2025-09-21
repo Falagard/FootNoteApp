@@ -1,9 +1,11 @@
 {
   "dependencies": [
     {
-      "name": "colyseus-websocket",
-      "type": "haxelib",
-      "version": null
+      "name": "hxWebSockets",
+      "type": "git",
+      "dir": null,
+      "ref": "master",
+      "url": "https://github.com/ianharrigan/hxWebSockets"
     },
     {
       "name": "lime",

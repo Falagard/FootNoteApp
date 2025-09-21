@@ -30,10 +30,10 @@ class Main extends Application
 		var openBrowser:Bool = false;
 
         BaseHTTPRequestHandler.protocolVersion = protocol;
-		RunHTTPRequestHandler.corsEnabled = corsEnabled;
-		RunHTTPRequestHandler.cacheEnabled = cacheEnabled;
-		RunHTTPRequestHandler.silent = silent;
-		var httpServer = new RunHTTPServer(new Host(address), port, RunHTTPRequestHandler, true, directory);
+		FootNoteHTTPRequestHandler.corsEnabled = corsEnabled;
+		FootNoteHTTPRequestHandler.cacheEnabled = cacheEnabled;
+		FootNoteHTTPRequestHandler.silent = silent;
+		var httpServer = new FootNoteHTTPServer(new Host(address), port, FootNoteHTTPRequestHandler, true, directory);
 		// HTTP/1.1 basically requires threads due to keeping the connection
 		// open after response, so we have no choice but to enable threading.
 		// ideally, it would be threaded for HTTP/1.0 too, but for reasons that
@@ -68,46 +68,6 @@ class Main extends Application
 	}
 }
 
-private class RunHTTPRequestHandler extends SimpleHTTPRequestHandler {
-	public static var corsEnabled = false;
-	public static var cacheEnabled = true;
-	public static var silent = false;
 
-	override private function setup():Void {
-		super.setup();
-		serverVersion = 'SnakeServer/1.2.0';
-	}
-
-	override public function endHeaders() {
-		if (corsEnabled) {
-			sendHeader('Access-Control-Allow-Origin', '*');
-		}
-		if (!cacheEnabled) {
-			sendHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-		}
-		super.endHeaders();
-	}
-
-	override private function logRequest(?code:Any, ?size:Any):Void {
-		if (silent) {
-			return;
-		}
-		super.logRequest(code, size);
-	}
-}
-
-private class RunHTTPServer extends HTTPServer {
-	private var directory:String;
-
-	public function new(serverHost:Host, serverPort:Int, requestHandlerClass:Class<BaseRequestHandler>, bindAndActivate:Bool = true, ?directory:String) {
-		this.directory = directory;
-		super(serverHost, serverPort, requestHandlerClass, bindAndActivate);
-		Sys.print('Serving HTTP on ${serverAddress.host} port ${serverAddress.port} (http://${serverAddress.host}:${serverAddress.port})\n');
-	}
-
-	override private function finishRequest(request:Socket, clientAddress:{host:Host, port:Int}):Void {
-		Type.createInstance(requestHandlerClass, [request, clientAddress, this, directory]);
-	}
-}
 
 

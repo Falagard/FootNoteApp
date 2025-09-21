@@ -180,4 +180,29 @@ class FootNoteHTTPRequestHandler extends SimpleHTTPRequestHandler {
 		}
 		super.logRequest(code, size);
 	}
+
+    	/**
+	 * Returns a dynamic object with the current application state and relevant info.
+	 */
+	public static function getState():Dynamic {
+		return switch (state) {
+			case AppState.MainMenu(selected): {
+				type: "MainMenu",
+				selected: selected
+			};
+			case AppState.FileList(selected, files): {
+				type: "FileList",
+				selected: selected,
+				files: files
+			};
+			case AppState.ViewLyrics(file, page): {
+				type: "ViewLyrics",
+				file: file,
+				page: page,
+				pageCount: getPageCount(file),
+				lines: getPage(file, page)
+			};
+		}
+	}
+
 }

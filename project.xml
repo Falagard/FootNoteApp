@@ -8,6 +8,7 @@
 	
 	<haxelib name="lime" />
 	<haxelib name="snake-server" />
+	<haxelib name="colyseus-websocket" />
 	
 	<!-- <assets path="Assets" rename="assets" /> -->
 	

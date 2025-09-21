@@ -17,12 +17,12 @@ class FootNoteWebSocketServer {
         this.port = port;
         server = WebSocketServer.create('0.0.0.0', port, 1, false, true);
         FootNoteWebSocketServer.wsServer = this;
+        trace('listening on port $port');
     }
 
     public function update() {
-        trace('listening on port $port');
-
-		var websocket = server.accept();
+        
+    	var websocket = server.accept();
         if (websocket != null) {
             handlers.push(new FootNoteWebSocketHandler(websocket));
         }
@@ -41,8 +41,8 @@ class FootNoteWebSocketServer {
     public function broadcastState() {
         var state = FootNoteHTTPRequestHandler.getState();
         var json = haxe.Json.stringify(state);
-        for (client in clients) {
-            client.sendString(json);
+        for (handler in handlers) {
+            handler.sendString(json);
         }
     }
 }

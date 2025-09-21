@@ -27,7 +27,7 @@ class FootNoteWebSocketHandler {
 	
     function onopen():Void {
 		trace('$_id:open');
-		_websocket.sendString('Hello from server');
+		//_websocket.sendString('Hello from server');
     }
 
     function onerror(message:String):Void {
@@ -47,4 +47,8 @@ class FootNoteWebSocketHandler {
     function onclose(?e:Null<Dynamic>):Void {
 		trace('$_id:close');
     }
+
+    public function sendString(msg:String):Void {
+		_websocket.sendString(msg);
+	}
 }

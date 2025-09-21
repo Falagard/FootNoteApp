@@ -6,43 +6,37 @@ import sys.net.Host;
 import FootNoteHTTPRequestHandler;
 
 class FootNoteWebSocketServer {
+    public static var wsServer:FootNoteWebSocketServer = null;
     public var wss:WebSocketServer;
     public var clients:Array<WebSocket> = [];
+    var handlers = [];
+    var server:WebSocketServer;
+    var port = 8000;
 
     public function new(port:Int) {
-
-        var port = 8000;
-		var server = WebSocketServer.create('0.0.0.0', port, 1, true, true);
-		var handlers = [];
-
-		trace('listening on port $port');
-
-		while (true) {
-			try{
-			
-				var websocket = server.accept();
-				if (websocket != null) {
-					handlers.push(new FootNoteWebSocketHandler(websocket));
-				}
-				
-				var toRemove = [];
-				for (handler in handlers) {
-					if (!handler.update()) {
-						toRemove.push(handler);
-					}
-				}
-				
-				while (toRemove.length > 0)
-					handlers.remove(toRemove.pop());
-					
-				Sys.sleep(0.1);
-			}
-			catch (e:Dynamic) {
-				trace('Error', e);
-				//trace(CallStack.exceptionStack());
-			}
-		}
+        this.port = port;
+        server = WebSocketServer.create('0.0.0.0', port, 1, false, true);
+        FootNoteWebSocketServer.wsServer = this;
     }
+
+    public function update() {
+        trace('listening on port $port');
+
+		var websocket = server.accept();
+        if (websocket != null) {
+            handlers.push(new FootNoteWebSocketHandler(websocket));
+        }
+        
+        var toRemove = [];
+        for (handler in handlers) {
+            if (!handler.update()) {
+                toRemove.push(handler);
+            }
+        }
+        
+        while (toRemove.length > 0)
+            handlers.remove(toRemove.pop());
+    }   
 
     public function broadcastState() {
         var state = FootNoteHTTPRequestHandler.getState();

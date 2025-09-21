@@ -37,8 +37,9 @@ class Main extends Application
 		var httpServer = new FootNoteHTTPServer(new Host(address), port, FootNoteHTTPRequestHandler, true, directory);
 		httpServer.threading = protocol >= "HTTP/1.1";
 
-		// Start WebSocket server on port 8081
-		var wsServer = new FootNoteWebSocketServer(8081);
+		// Start WebSocket server on port 8001
+		var wsServer = new FootNoteWebSocketServer(8001);
+
 		FootNoteHTTPRequestHandler.onStateChange = function() {
 			wsServer.broadcastState();
 		};

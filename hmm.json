@@ -1,13 +1,6 @@
 {
   "dependencies": [
     {
-      "name": "hxWebSockets",
-      "type": "git",
-      "dir": null,
-      "ref": "master",
-      "url": "https://github.com/ianharrigan/hxWebSockets"
-    },
-    {
       "name": "lime",
       "type": "haxelib",
       "version": null

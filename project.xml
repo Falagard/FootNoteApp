@@ -8,8 +8,7 @@
 	
 	<haxelib name="lime" />
 	<haxelib name="snake-server" />
-	<haxelib name="hxWebSockets" />
 	
-	<!-- <assets path="Assets" rename="assets" /> -->
+	<assets path="static" />
 	
 </project>

@@ -4,6 +4,8 @@ import snake.server.*;
 import snake.socket.*;
 import sys.net.Host;
 import sys.net.Socket;
+import sys.io.*;
+import haxe.io.Path;
 import snake.http.*;
 
 	// --- State Machine Enum ---
@@ -81,18 +83,36 @@ class FootNoteHTTPRequestHandler extends SimpleHTTPRequestHandler {
 		commandHandlers.set("POST", do_POST);
 	}
 
-	override private function do_GET():Void {
-		var url = this.path;
-		if (url == "/api/state") {
-			sendJson(snake.http.HTTPStatus.OK, toJsonState());
-			return;
-		} else if (url == "/api/files") {
-			sendJson(snake.http.HTTPStatus.OK, { files: lyricFiles });
-			return;
-		}
-		// Not found
-		sendJson(snake.http.HTTPStatus.NOT_FOUND, { error: "Not found" });
-	}
+       override private function do_GET():Void {
+	       var url = this.path;
+	       if (StringTools.startsWith(url, "/static/")) {
+		       // Serve static files from CWD/static
+		       var staticDir = Path.addTrailingSlash(Sys.getCwd()) + "static";
+		       // Save old directory, set to staticDir for this request
+		       var oldDir = this.directory;
+		       this.directory = staticDir;
+		       // Remove /static prefix for file lookup
+		       this.path = url.substr("/static".length);
+		       // Use parent GET logic
+		       var handled = false;
+		       try {
+			       super.do_GET();
+			       handled = true;
+		       } catch (e:Dynamic) {
+			       // fallback to error below
+		       }
+		       this.directory = oldDir;
+		       if (handled) return;
+	       } else if (url == "/api/state") {
+		       sendJson(snake.http.HTTPStatus.OK, toJsonState());
+		       return;
+	       } else if (url == "/api/files") {
+		       sendJson(snake.http.HTTPStatus.OK, { files: lyricFiles });
+		       return;
+	       }
+	       // Not found
+	       sendJson(snake.http.HTTPStatus.NOT_FOUND, { error: "Not found" });
+       }
 
 	override private function do_HEAD():Void {
 		// For simplicity, just call do_GET (no body)

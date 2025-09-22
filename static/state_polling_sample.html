@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State Polling Sample</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        #message { color: green; font-weight: bold; margin-top: 1em; }
+        #details { margin-top: 1em; }
+        .label { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>State Polling Sample</h1>
+    <div>
+        Current State: <span id="state">Unknown</span>
+    </div>
+    <div id="message"></div>
+    <div id="details"></div>
+    <script>
+        let lastStateType = null;
+        let lastStateData = null;
+        const stateSpan = document.getElementById('state');
+        const messageDiv = document.getElementById('message');
+        const detailsDiv = document.getElementById('details');
+
+        function stateSummary(state) {
+            switch (state.type) {
+                case 'MainMenu':
+                    return `MainMenu (selected: ${state.selected})`;
+                case 'FileList':
+                    return `FileList (selected: ${state.selected}, files: ${state.files ? state.files.length : 0})`;
+                case 'ViewLyrics':
+                    return `ViewLyrics (file: ${state.file}, page: ${state.page+1}/${state.pageCount})`;
+                default:
+                    return 'Unknown';
+            }
+        }
+
+        function renderDetails(state) {
+            let html = '';
+            switch (state.type) {
+                case 'MainMenu':
+                    html = `<span class="label">Selected Option:</span> ${state.selected}`;
+                    break;
+                case 'FileList':
+                    html = `<span class="label">Selected File:</span> ${state.files && state.files[state.selected] ? state.files[state.selected] : 'None'}<br>`;
+                    html += `<span class="label">Files:</span> <ul>`;
+                    if (state.files) {
+                        for (let i = 0; i < state.files.length; i++) {
+                            html += `<li${i === state.selected ? ' style="font-weight:bold;"' : ''}>${state.files[i]}</li>`;
+                        }
+                    }
+                    html += '</ul>';
+                    break;
+                case 'ViewLyrics':
+                    html = `<span class="label">File:</span> ${state.file}<br>`;
+                    html += `<span class="label">Page:</span> ${state.page+1} / ${state.pageCount}<br>`;
+                    if (state.lines) {
+                        html += `<span class="label">Lyrics:</span><pre>${state.lines.join('\n')}</pre>`;
+                    }
+                    break;
+                default:
+                    html = '';
+            }
+            detailsDiv.innerHTML = html;
+        }
+
+        async function pollState() {
+            try {
+                const response = await fetch('http://localhost:8000/api/state');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                stateSpan.textContent = data.type;
+                renderDetails(data);
+                if (lastStateType !== null && lastStateType !== data.type) {
+                    messageDiv.textContent = `State changed from '${lastStateType}' to '${data.type}'!`;
+                } else {
+                    messageDiv.textContent = '';
+                }
+                lastStateType = data.type;
+                lastStateData = data;
+            } catch (err) {
+                stateSpan.textContent = 'Error';
+                messageDiv.textContent = err.message;
+                detailsDiv.innerHTML = '';
+            }
+        }
+
+        setInterval(pollState, 50);
+        pollState();
+    </script>
+</body>
+</html>

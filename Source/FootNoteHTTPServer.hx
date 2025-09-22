@@ -6,8 +6,6 @@ import sys.net.Host;
 import sys.net.Socket;
 import snake.http.*;
 
-import FootNoteWebSocketServer;
-
 class FootNoteHTTPServer extends HTTPServer {
 	
 	private var directory:String;
@@ -22,9 +20,8 @@ class FootNoteHTTPServer extends HTTPServer {
 
 	override function serviceActions() {
 		super.serviceActions();
-		if (FootNoteWebSocketServer.wsServer != null) {
-			FootNoteWebSocketServer.wsServer.update();
-		}
+		
+		//if we wanted to update a WebSocket server each tick, this is where it would happen
 	}
 
     //singleton 

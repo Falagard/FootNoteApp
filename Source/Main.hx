@@ -8,7 +8,6 @@ import snake.socket.*;
 import sys.net.Host;
 import sys.net.Socket;
 import snake.server.*;
-import FootNoteWebSocketServer;
 
 class Main extends Application
 {
@@ -37,11 +36,8 @@ class Main extends Application
 		var httpServer = new FootNoteHTTPServer(new Host(address), port, FootNoteHTTPRequestHandler, true, directory);
 		httpServer.threading = protocol >= "HTTP/1.1";
 
-		// Start WebSocket server on port 8001
-		var wsServer = new FootNoteWebSocketServer(8001);
-
 		FootNoteHTTPRequestHandler.onStateChange = function() {
-			wsServer.broadcastState();
+			//if we wanted to send out realtime updates via WebSocket here's where it would happen
 		};
 
 		if (openBrowser) {

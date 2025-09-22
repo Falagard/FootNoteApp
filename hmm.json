@@ -1,16 +1,6 @@
 {
   "dependencies": [
     {
-      "name": "colyseus-websocket",
-      "type": "haxelib",
-      "version": null
-    },
-    {
-      "name": "hxWebSockets",
-      "type": "haxelib",
-      "version": null
-    },
-    {
       "name": "lime",
       "type": "haxelib",
       "version": null

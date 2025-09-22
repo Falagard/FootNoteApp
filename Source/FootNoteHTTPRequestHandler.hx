@@ -8,13 +8,8 @@ import sys.io.*;
 import haxe.io.Path;
 import snake.http.*;
 
-	// --- State Machine Enum ---
-// --- State Machine Enum ---
-enum AppState {
-	MainMenu(selected:Int);
-	FileList(selected:Int, files:Array<String>);
-	ViewLyrics(file:String, page:Int);
-}
+import Main.AppState;
+
 
 class FootNoteHTTPRequestHandler extends SimpleHTTPRequestHandler {
 
@@ -27,7 +22,7 @@ class FootNoteHTTPRequestHandler extends SimpleHTTPRequestHandler {
 	public static var lyricsPerPage:Int = 10;
 
 
-	public static var state:AppState = AppState.MainMenu(0);
+
 
 	public static function getLyricFiles():Array<String> {
 		// TODO: Replace with actual file listing logic
@@ -56,24 +51,28 @@ class FootNoteHTTPRequestHandler extends SimpleHTTPRequestHandler {
 	}
 
 	public static function toJsonState():Dynamic {
-		return switch (state) {
-			case AppState.MainMenu(selected): {
-				type: "MainMenu",
-				selected: selected
-			};
-			case AppState.FileList(selected, files): {
-				type: "FileList",
-				selected: selected,
-				files: files
-			};
-			case AppState.ViewLyrics(file, page): {
-				type: "ViewLyrics",
-				file: file,
-				page: page,
-				pageCount: getPageCount(file),
-				lines: getPage(file, page)
-			};
-		}
+	       return switch (Main.state) {
+		       case Main.AppState.MainMenu(selected): {
+			       type: "MainMenu",
+			       selected: selected,
+			       options: [
+			           "View Lyric Files",
+			           "Copy Files From USB"
+			       ]
+		       };
+		       case Main.AppState.FileList(selected, files): {
+			       type: "FileList",
+			       selected: selected,
+			       files: files
+		       };
+		       case Main.AppState.ViewLyrics(file, page): {
+			       type: "ViewLyrics",
+			       file: file,
+			       page: page,
+			       pageCount: getPageCount(file),
+			       lines: getPage(file, page)
+		       };
+	       }
 	}
 
 	// --- REST API Setup ---
@@ -83,36 +82,34 @@ class FootNoteHTTPRequestHandler extends SimpleHTTPRequestHandler {
 		commandHandlers.set("POST", do_POST);
 	}
 
-       override private function do_GET():Void {
-	       var url = this.path;
-	       if (StringTools.startsWith(url, "/static/")) {
-		       // Serve static files from CWD/static
-		       var staticDir = Path.addTrailingSlash(Sys.getCwd()) + "static";
-		       // Save old directory, set to staticDir for this request
-		       var oldDir = this.directory;
-		       this.directory = staticDir;
-		       // Remove /static prefix for file lookup
-		       this.path = url.substr("/static".length);
-		       // Use parent GET logic
-		       var handled = false;
-		       try {
-			       super.do_GET();
-			       handled = true;
-		       } catch (e:Dynamic) {
-			       // fallback to error below
-		       }
-		       this.directory = oldDir;
-		       if (handled) return;
-	       } else if (url == "/api/state") {
-		       sendJson(snake.http.HTTPStatus.OK, toJsonState());
-		       return;
-	       } else if (url == "/api/files") {
-		       sendJson(snake.http.HTTPStatus.OK, { files: lyricFiles });
-		       return;
-	       }
-	       // Not found
-	       sendJson(snake.http.HTTPStatus.NOT_FOUND, { error: "Not found" });
-       }
+	override private function do_GET():Void {
+		var url = this.path;
+		if (StringTools.startsWith(url, "/static/")) {
+			// Serve static files from CWD/static
+			var staticDir = Path.addTrailingSlash(Sys.getCwd()) + "static";
+			// Save old directory, set to staticDir for this request
+			var oldDir = this.directory;
+			this.directory = staticDir;
+			// Remove /static prefix for file lookup
+			this.path = url.substr("/static".length);
+			// Use parent GET logic
+			var handled = false;
+			try {
+				super.do_GET();
+				handled = true;
+			} catch (e:Dynamic) {
+				// fallback to error below
+			}
+			this.directory = oldDir;
+			if (handled) return;
+		} else if (url == "/api/state") {
+			sendJson(snake.http.HTTPStatus.OK, toJsonState());
+			return;
+		} 
+
+		// Not found
+		sendJson(snake.http.HTTPStatus.NOT_FOUND, { error: "Not found" });
+	}
 
 	override private function do_HEAD():Void {
 		// For simplicity, just call do_GET (no body)
@@ -120,50 +117,45 @@ class FootNoteHTTPRequestHandler extends SimpleHTTPRequestHandler {
 	}
 
 	private function do_POST():Void {
-		var url = this.path;
-		if (StringTools.startsWith(url, "/api/select/")) {
-			var idxStr = url.substr("/api/select/".length);
-			var idx = Std.parseInt(idxStr);
-			if (idx != null && idx >= 0 && idx < lyricFiles.length) {
-				var file = lyricFiles[idx];
-				state = AppState.ViewLyrics(file, 0);
-				broadcastState();
-				sendJson(snake.http.HTTPStatus.OK, toJsonState());
-			} else {
-				sendJson(snake.http.HTTPStatus.BAD_REQUEST, { error: "Invalid index" });
-			}
-			return;
-		} else if (url == "/api/page/next") {
-			switch (state) {
-				case AppState.ViewLyrics(file, page):
-					var pageCount = getPageCount(file);
-					if (page < pageCount - 1) {
-						state = AppState.ViewLyrics(file, page + 1);
-						broadcastState();
-					}
-					sendJson(snake.http.HTTPStatus.OK, toJsonState());
-				default:
-					sendJson(snake.http.HTTPStatus.BAD_REQUEST, { error: "Not viewing lyrics" });
-			}
-			return;
-		} else if (url == "/api/page/prev") {
-			switch (state) {
-				case AppState.ViewLyrics(file, page):
-					if (page > 0) {
-						state = AppState.ViewLyrics(file, page - 1);
-						broadcastState();
-					}
-					sendJson(snake.http.HTTPStatus.OK, toJsonState());
-				default:
-					sendJson(snake.http.HTTPStatus.BAD_REQUEST, { error: "Not viewing lyrics" });
-			}
-			return;
-		} else if (url == "/api/menu") {
-			state = AppState.MainMenu(0);
-			broadcastState();
-			sendJson(snake.http.HTTPStatus.OK, toJsonState());
-			return;
-		}
+		// var url = this.path;
+
+		// if (url == "/api/command/next") {
+		//        switch (Main.state) {
+		// 	       case Main.AppState.ViewLyrics(file, page):
+		// 		       var pageCount = getPageCount(file);
+		// 		       if (page < pageCount - 1) {
+		// 			       Main.state = Main.AppState.ViewLyrics(file, page + 1);
+		// 			       broadcastState();
+		// 		       }
+		// 		       sendJson(snake.http.HTTPStatus.OK, toJsonState());
+		// 	       default:
+		// 		       sendJson(snake.http.HTTPStatus.BAD_REQUEST, { error: "Not viewing lyrics" });
+		//        }
+		// 	return;
+		// } else if (url == "/api/command/prev") {
+		//        switch (Main.state) {
+		// 	       case Main.AppState.ViewLyrics(file, page):
+		// 		       if (page > 0) {
+		// 			       Main.state = Main.AppState.ViewLyrics(file, page - 1);
+		// 			       broadcastState();
+		// 		       }
+		// 		       sendJson(snake.http.HTTPStatus.OK, toJsonState());
+		// 	       default:
+		// 		       sendJson(snake.http.HTTPStatus.BAD_REQUEST, { error: "Not viewing lyrics" });
+		//        }
+		// 	return;
+		// } else if (url == "/api/command/select") {
+		// 	Main.state = Main.AppState.MainMenu(0);
+		// 	broadcastState();
+		// 	sendJson(snake.http.HTTPStatus.OK, toJsonState());
+		// 	return;
+		// }
+		// else if (url == "/api/command/back") {
+		// 	Main.state = Main.AppState.MainMenu(0);
+		// 	broadcastState();
+		// 	sendJson(snake.http.HTTPStatus.OK, toJsonState());
+		// 	return;
+		// }
 		sendJson(snake.http.HTTPStatus.NOT_FOUND, { error: "Not found" });
 	}
 
@@ -205,10 +197,14 @@ class FootNoteHTTPRequestHandler extends SimpleHTTPRequestHandler {
 	 * Returns a dynamic object with the current application state and relevant info.
 	 */
 	public static function getState():Dynamic {
-		return switch (state) {
+		return switch (Main.state) {
 			case AppState.MainMenu(selected): {
 				type: "MainMenu",
-				selected: selected
+				selected: selected,
+				options: [
+				    "View Lyric Files",
+				    "Copy Files From USB"
+				]
 			};
 			case AppState.FileList(selected, files): {
 				type: "FileList",

@@ -8,12 +8,15 @@ import snake.socket.*;
 import sys.net.Host;
 import sys.net.Socket;
 import snake.server.*;
+import lime.ui.Gamepad;
+import lime.ui.GamepadButton;
 
 class Main extends Application
 {
 	private static final DEFAULT_PROTOCOL = "HTTP/1.0";
 	private static final DEFAULT_ADDRESS = "127.0.0.1";
 	private static final DEFAULT_PORT = 8000;
+	private var httpServer:FootNoteHTTPServer;
 
 	public function new()
 	{
@@ -33,7 +36,7 @@ class Main extends Application
 		FootNoteHTTPRequestHandler.corsEnabled = corsEnabled;
 		FootNoteHTTPRequestHandler.cacheEnabled = cacheEnabled;
 		FootNoteHTTPRequestHandler.silent = silent;
-		var httpServer = new FootNoteHTTPServer(new Host(address), port, FootNoteHTTPRequestHandler, true, directory);
+		httpServer = new FootNoteHTTPServer(new Host(address), port, FootNoteHTTPRequestHandler, true, directory);
 		httpServer.threading = protocol >= "HTTP/1.1";
 
 		FootNoteHTTPRequestHandler.onStateChange = function() {
@@ -53,18 +56,27 @@ class Main extends Application
 					Sys.println('Failed to open web browser. Unknown system: "${Sys.systemName()}"');
 			}
 		}	
-
-		httpServer.serveForever();
 	}
 
 	public static function main() {
 		var app:Main = new Main();
+		app.exec();
 	}
 
-	override public function createWindow(attributes:WindowAttributes): Window {
-		trace("Hello Headless World");
-		return null;
-	}
+	 public override function update(deltaTime:Int):Void
+	 {
+		httpServer.serve();
+	 }
+
+	 public override function onGamepadConnect(gamepad:Gamepad):Void
+	 {
+		trace("Gamepad connected: " + gamepad.id);
+	 }
+
+	 public override function onGamepadButtonDown(gamepad:Gamepad, button:GamepadButton):Void
+	 {
+		trace("Gamepad button down: " + button);
+	 }
 }
 
 

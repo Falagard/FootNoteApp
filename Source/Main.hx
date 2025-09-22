@@ -1,5 +1,6 @@
 package;
 
+import sys.thread.Thread;
 import lime.app.Application;
 import lime.ui.WindowAttributes;
 import lime.ui.Window;
@@ -10,6 +11,7 @@ import sys.net.Socket;
 import snake.server.*;
 import lime.ui.Gamepad;
 import lime.ui.GamepadButton;
+import Date;
 
 
 class Main extends Application
@@ -57,6 +59,10 @@ class Main extends Application
 					Sys.println('Failed to open web browser. Unknown system: "${Sys.systemName()}"');
 			}
 		}	
+
+		// Thread.create(() -> {
+		// 	httpServer.serveForever(0.1);
+		// });
 	}
 
 	public static function main() {
@@ -64,20 +70,25 @@ class Main extends Application
 		app.exec();
 	}
 
-	 public override function update(deltaTime:Int):Void
-	 {
-		httpServer.serve();
-	 }
+	public override function update(deltaTime:Int):Void
+	{
+		httpServer.serve(0);
+	}
 
-	 public override function onGamepadConnect(gamepad:Gamepad):Void
-	 {
+	public override function onGamepadConnect(gamepad:Gamepad):Void
+	{
 		trace("Gamepad connected: " + gamepad.id);
-	 }
+	}
 
-	 public override function onGamepadButtonDown(gamepad:Gamepad, button:GamepadButton):Void
-	 {
+	public override function onGamepadButtonDown(gamepad:Gamepad, button:GamepadButton):Void
+	{
 		trace("Gamepad button down: " + button);
-	 }
+	}
+
+	override public function createWindow(attributes:WindowAttributes): Window {
+		trace("Hello Headless World");
+		return null;
+	}
 }
 
 

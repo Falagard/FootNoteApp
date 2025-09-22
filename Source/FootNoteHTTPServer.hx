@@ -20,7 +20,6 @@ class FootNoteHTTPServer extends HTTPServer {
 
 	override function serviceActions() {
 		super.serviceActions();
-		
 		//if we wanted to update a WebSocket server each tick, this is where it would happen
 	}
 
